@@ -2,7 +2,9 @@ package com.arthur.github_analizer.service;
 
 import com.arthur.github_analizer.dto.GithubResponse;
 import com.arthur.github_analizer.dto.GithubResponseApi;
+import com.arthur.github_analizer.exception.GithubUserNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -17,23 +19,28 @@ public class GithubService {
     public GithubResponse getGithubProfile(String name) {
         String url = "https://api.github.com/users/" + name;
 
-        GithubResponseApi response = restClient.get()
-                .uri(url)
-                .retrieve()
-                .body(GithubResponseApi.class);
+        try {
 
-        return new GithubResponse(
-                response.login(),
-                response.name(),
-                response.company(),
-                response.location(),
-                response.bio(),
-                response.publicRepos(),
-                response.followers(),
-                response.following(),
-                response.createdAt()
-        );
+            GithubResponseApi response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(GithubResponseApi.class);
+
+            return new GithubResponse(
+                    response.login(),
+                    response.name(),
+                    response.company(),
+                    response.location(),
+                    response.bio(),
+                    response.publicRepos(),
+                    response.followers(),
+                    response.following(),
+                    response.createdAt()
+            );
+        }catch (HttpClientErrorException.NotFound e) {
+            throw new GithubUserNotFoundException("Github not found");
+        }
+
     }
-
 
 }

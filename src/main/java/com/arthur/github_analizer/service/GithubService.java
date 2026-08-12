@@ -2,9 +2,11 @@ package com.arthur.github_analizer.service;
 
 import com.arthur.github_analizer.dto.GithubResponse;
 import com.arthur.github_analizer.dto.GithubResponseApi;
+import com.arthur.github_analizer.exception.GithubApiException;
 import com.arthur.github_analizer.exception.GithubUserNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -39,6 +41,8 @@ public class GithubService {
             );
         }catch (HttpClientErrorException.NotFound e) {
             throw new GithubUserNotFoundException("Github not found");
+        }catch (HttpServerErrorException e) {
+            throw new GithubApiException("Github API is currently unavailable");
         }
 
     }

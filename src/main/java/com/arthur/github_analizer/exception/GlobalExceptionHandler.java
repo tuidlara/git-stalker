@@ -13,4 +13,10 @@ public class GlobalExceptionHandler {
     public String githubNotFound(GithubUserNotFoundException e) {
         return e.getMessage();
     }
+
+    @ExceptionHandler(GithubApiException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public String githubApi(GithubApiException ex) {
+        return ex.getMessage();
+    }
 }

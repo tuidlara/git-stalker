@@ -28,6 +28,10 @@ public class GithubService {
                     .retrieve()
                     .body(GithubResponseApi.class);
 
+            if (response == null) {
+                throw new GithubApiException("Github API returned an empty response");
+            }
+
             return new GithubResponse(
                     response.login(),
                     response.name(),

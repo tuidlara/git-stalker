@@ -1,5 +1,6 @@
 package com.arthur.github_analizer.service;
 
+import com.arthur.github_analizer.dto.GithubResponseApi;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -12,12 +13,13 @@ public class GithubService {
         this.restClient = restClient;
     }
 
-    public String getGithubProfile(String name) {
+    public GithubResponseApi getGithubProfile(String name) {
         String url = "https://api.github.com/users/" + name;
 
-        return restClient.get()
+        GithubResponseApi response = restClient.get()
                 .uri(url)
                 .retrieve()
-                .body(String.class);
+                .body(GithubResponseApi.class);
+        return response;
     }
 }

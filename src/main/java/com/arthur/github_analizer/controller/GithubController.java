@@ -1,5 +1,6 @@
 package com.arthur.github_analizer.controller;
 
+import com.arthur.github_analizer.dto.GithubResponseApi;
 import com.arthur.github_analizer.service.GithubService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +18,7 @@ public class GithubController {
     }
 
     @GetMapping("/{name}")
-    public String getUser(@PathVariable String name) {
+    public GithubResponseApi getUser(@PathVariable String name) {
         return githubService.getGithubProfile(name);
     }
 }

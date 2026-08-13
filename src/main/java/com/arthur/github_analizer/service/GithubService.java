@@ -1,6 +1,7 @@
 package com.arthur.github_analizer.service;
 
 import com.arthur.github_analizer.dto.GithubRepositoryResponse;
+import com.arthur.github_analizer.dto.GithubRepositoryStats;
 import com.arthur.github_analizer.dto.GithubResponse;
 import com.arthur.github_analizer.dto.GithubResponseApi;
 import com.arthur.github_analizer.exception.GithubApiException;
@@ -34,9 +35,7 @@ public class GithubService {
                 throw new GithubApiException("Github API returned an empty response");
             }
 
-            long totalStars = getTotalStars(name);
-
-            String mostPopularRepository = getMostPopularRepository(name);
+            GithubRepositoryStats stats = getRepositoryStats(name);
 
             return new GithubResponse(
                     response.login(),
@@ -48,8 +47,8 @@ public class GithubService {
                     response.followers(),
                     response.following(),
                     response.createdAt(),
-                    totalStars,
-                    mostPopularRepository
+                    stats.totalStars(),
+                    stats.mostPopularRepository()
 
             );
         } catch (HttpClientErrorException.NotFound e) {
@@ -60,39 +59,16 @@ public class GithubService {
 
     }
 
-    private long getTotalStars(String name) {
+    private GithubRepositoryStats getRepositoryStats(String name) {
+
         long totalStars = 0;
-        int page = 1;
-
-        while (true) {
-            String url = "https://api.github.com/users/" + name
-                    + "/repos?per_page=100&page=" + page;
-
-            GithubRepositoryResponse[] repos = restClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .body(GithubRepositoryResponse[].class);
-
-            if (repos == null || repos.length == 0) {
-                break;
-            }
-
-            for (GithubRepositoryResponse repo : repos) {
-                totalStars += repo.stargazersCount();
-            }
-
-            page++;
-        }
-
-        return totalStars;
-    }
-
-    private String getMostPopularRepository(String name) {
         long maiorNumeroDeEstrelas = 0;
         String repositorioMaisFamoso = null;
+
         int page = 1;
 
         while (true) {
+
             String url = "https://api.github.com/users/" + name
                     + "/repos?per_page=100&page=" + page;
 
@@ -104,17 +80,26 @@ public class GithubService {
             if (repos == null || repos.length == 0) {
                 break;
             }
+
             for (GithubRepositoryResponse repo : repos) {
+
+                totalStars += repo.stargazersCount();
+
                 if (repo.stargazersCount() > maiorNumeroDeEstrelas) {
                     maiorNumeroDeEstrelas = repo.stargazersCount();
                     repositorioMaisFamoso = repo.name();
                 }
             }
-            page++;
 
+            page++;
         }
-        return repositorioMaisFamoso;
+
+        return new GithubRepositoryStats(
+                totalStars,
+                repositorioMaisFamoso
+        );
     }
 }
+
 
 

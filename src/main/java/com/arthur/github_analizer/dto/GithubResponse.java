@@ -10,6 +10,8 @@ public record GithubResponse(
         int followers,
         int following,
         String createdAt,
-        long totalStats
+        long totalStats,
+        String mostPopularRepository
+
 ) {
 }

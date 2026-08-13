@@ -20,6 +20,7 @@ public class GithubService {
     }
 
     public GithubResponse getGithubProfile(String name) {
+
         String url = "https://api.github.com/users/" + name;
 
         try {
@@ -35,6 +36,8 @@ public class GithubService {
 
             long totalStars = getTotalStars(name);
 
+            String mostPopularRepository = getMostPopularRepository(name);
+
             return new GithubResponse(
                     response.login(),
                     response.name(),
@@ -45,7 +48,8 @@ public class GithubService {
                     response.followers(),
                     response.following(),
                     response.createdAt(),
-                    totalStars
+                    totalStars,
+                    mostPopularRepository
 
             );
         } catch (HttpClientErrorException.NotFound e) {
@@ -81,6 +85,35 @@ public class GithubService {
         }
 
         return totalStars;
+    }
+
+    private String getMostPopularRepository(String name) {
+        long maiorNumeroDeEstrelas = 0;
+        String repositorioMaisFamoso = null;
+        int page = 1;
+
+        while (true) {
+            String url = "https://api.github.com/users/" + name
+                    + "/repos?per_page=100&page=" + page;
+
+            GithubRepositoryResponse[] repos = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(GithubRepositoryResponse[].class);
+
+            if (repos == null || repos.length == 0) {
+                break;
+            }
+            for (GithubRepositoryResponse repo : repos) {
+                if (repo.stargazersCount() > maiorNumeroDeEstrelas) {
+                    maiorNumeroDeEstrelas = repo.stargazersCount();
+                    repositorioMaisFamoso = repo.name();
+                }
+            }
+            page++;
+
+        }
+        return repositorioMaisFamoso;
     }
 }
 

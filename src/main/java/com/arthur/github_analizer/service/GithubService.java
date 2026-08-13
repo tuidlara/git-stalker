@@ -1,5 +1,6 @@
 package com.arthur.github_analizer.service;
 
+import com.arthur.github_analizer.dto.GithubRepositoryResponse;
 import com.arthur.github_analizer.dto.GithubResponse;
 import com.arthur.github_analizer.dto.GithubResponseApi;
 import com.arthur.github_analizer.exception.GithubApiException;
@@ -32,6 +33,8 @@ public class GithubService {
                 throw new GithubApiException("Github API returned an empty response");
             }
 
+            long totalStars = getTotalStars(name);
+
             return new GithubResponse(
                     response.login(),
                     response.name(),
@@ -41,14 +44,44 @@ public class GithubService {
                     response.publicRepos(),
                     response.followers(),
                     response.following(),
-                    response.createdAt()
+                    response.createdAt(),
+                    totalStars
+
             );
-        }catch (HttpClientErrorException.NotFound e) {
+        } catch (HttpClientErrorException.NotFound e) {
             throw new GithubUserNotFoundException("Github not found");
-        }catch (HttpServerErrorException e) {
+        } catch (HttpServerErrorException e) {
             throw new GithubApiException("Github API is currently unavailable");
         }
 
     }
 
+    private long getTotalStars(String name) {
+        long totalStars = 0;
+        int page = 1;
+
+        while (true) {
+            String url = "https://api.github.com/users/" + name
+                    + "/repos?per_page=100&page=" + page;
+
+            GithubRepositoryResponse[] repos = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(GithubRepositoryResponse[].class);
+
+            if (repos == null || repos.length == 0) {
+                break;
+            }
+
+            for (GithubRepositoryResponse repo : repos) {
+                totalStars += repo.stargazersCount();
+            }
+
+            page++;
+        }
+
+        return totalStars;
+    }
 }
+
+

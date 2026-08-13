@@ -1,7 +1,6 @@
 package com.arthur.github_analizer.controller;
 
 import com.arthur.github_analizer.dto.GithubResponse;
-import com.arthur.github_analizer.dto.GithubResponseApi;
 import com.arthur.github_analizer.service.GithubService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

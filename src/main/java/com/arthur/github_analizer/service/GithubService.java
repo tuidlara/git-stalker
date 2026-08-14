@@ -14,9 +14,11 @@ import org.springframework.web.client.RestClient;
 @Service
 public class GithubService {
 
+    private final String githubToken;
     private final RestClient restClient;
 
     public GithubService(RestClient restClient) {
+        this.githubToken = System.getenv("GITHUB_TOKEN");
         this.restClient = restClient;
     }
 
@@ -28,6 +30,7 @@ public class GithubService {
 
             GithubResponseApi response = restClient.get()
                     .uri(url)
+                    .header("Authorization", "Bearer " + githubToken)
                     .retrieve()
                     .body(GithubResponseApi.class);
 
@@ -74,6 +77,7 @@ public class GithubService {
 
             GithubRepositoryResponse[] repos = restClient.get()
                     .uri(url)
+                    .header("Authorization", "Bearer " + githubToken)
                     .retrieve()
                     .body(GithubRepositoryResponse[].class);
 

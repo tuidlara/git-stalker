@@ -6,10 +6,15 @@ import com.arthur.github_analizer.dto.GithubResponse;
 import com.arthur.github_analizer.dto.GithubResponseApi;
 import com.arthur.github_analizer.exception.GithubApiException;
 import com.arthur.github_analizer.exception.GithubUserNotFoundException;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class GithubService {
@@ -51,7 +56,8 @@ public class GithubService {
                     response.following(),
                     response.createdAt(),
                     stats.totalStars(),
-                    stats.mostPopularRepository()
+                    stats.mostPopularRepository(),
+                    stats.topLanguages()
 
             );
         } catch (HttpClientErrorException.NotFound e) {
@@ -67,6 +73,8 @@ public class GithubService {
         long totalStars = 0;
         long maiorNumeroDeEstrelas = 0;
         String repositorioMaisFamoso = null;
+
+        Map<String, Long> languageTotals = new HashMap<>();
 
         int page = 1;
 
@@ -87,6 +95,17 @@ public class GithubService {
 
             for (GithubRepositoryResponse repo : repos) {
 
+                Map<String, Long> languages =
+                        getRepositoryLanguages(name, repo.name());
+
+                for (Map.Entry<String, Long> entry : languages.entrySet()) {
+                    languageTotals.merge(
+                            entry.getKey(),
+                            entry.getValue(),
+                            Long::sum
+                    );
+                }
+
                 totalStars += repo.stargazersCount();
 
                 if (repo.stargazersCount() > maiorNumeroDeEstrelas) {
@@ -98,10 +117,38 @@ public class GithubService {
             page++;
         }
 
+        List<Map.Entry<String, Long>> sortedLanguages =
+                languageTotals.entrySet()
+                        .stream()
+                        .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                        .toList();
+
+        List<String> topLanguages = sortedLanguages.stream()
+                .limit(3)
+                .map(Map.Entry::getKey)
+                .toList();
+
         return new GithubRepositoryStats(
                 totalStars,
-                repositorioMaisFamoso
+                repositorioMaisFamoso,
+                topLanguages
         );
+    }
+
+    private Map<String, Long> getRepositoryLanguages(String name, String repositoryName) {
+
+        String url = "https://api.github.com/repos/" + name
+                + "/" + repositoryName + "/languages";
+
+        return restClient.get()
+                .uri(url)
+                .header("Authorization", "Bearer " + githubToken)
+                .retrieve()
+                //converter o json da resposta diretamente em um map
+                .body(new ParameterizedTypeReference<Map<String, Long>>() {
+                });
+
+
     }
 }
 

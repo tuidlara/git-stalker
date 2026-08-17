@@ -1,5 +1,7 @@
 package com.arthur.github_analizer.dto;
 
+import java.util.List;
+
 public record GithubResponse(
         String login,
         String name,
@@ -11,7 +13,8 @@ public record GithubResponse(
         int following,
         String createdAt,
         long totalStars,
-        String mostPopularRepository
+        String mostPopularRepository,
+        List<String> topLanguages
 
 ) {
 }

@@ -12,9 +12,11 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class GithubService {
@@ -93,10 +95,25 @@ public class GithubService {
                 break;
             }
 
+            List<CompletableFuture<Map<String, Long>>> futures = new ArrayList<>();
+
             for (GithubRepositoryResponse repo : repos) {
 
-                Map<String, Long> languages =
+                CompletableFuture<Map<String, Long>> future =
                         getRepositoryLanguages(name, repo.name());
+                futures.add(future);
+
+                totalStars += repo.stargazersCount();
+
+                if (repo.stargazersCount() > maiorNumeroDeEstrelas) {
+                    maiorNumeroDeEstrelas = repo.stargazersCount();
+                    repositorioMaisFamoso = repo.name();
+                }
+            }
+
+            for (CompletableFuture<Map<String, Long>> future : futures) {
+
+                Map<String, Long> languages = future.join();
 
                 for (Map.Entry<String, Long> entry : languages.entrySet()) {
                     languageTotals.merge(
@@ -104,13 +121,6 @@ public class GithubService {
                             entry.getValue(),
                             Long::sum
                     );
-                }
-
-                totalStars += repo.stargazersCount();
-
-                if (repo.stargazersCount() > maiorNumeroDeEstrelas) {
-                    maiorNumeroDeEstrelas = repo.stargazersCount();
-                    repositorioMaisFamoso = repo.name();
                 }
             }
 
@@ -135,20 +145,21 @@ public class GithubService {
         );
     }
 
-    private Map<String, Long> getRepositoryLanguages(String name, String repositoryName) {
+    private CompletableFuture<Map<String, Long>> getRepositoryLanguages(String name, String repositoryName) {
 
-        String url = "https://api.github.com/repos/" + name
-                + "/" + repositoryName + "/languages";
+        return CompletableFuture.supplyAsync(() -> {
 
-        return restClient.get()
-                .uri(url)
-                .header("Authorization", "Bearer " + githubToken)
-                .retrieve()
-                //converter o json da resposta diretamente em um map
-                .body(new ParameterizedTypeReference<Map<String, Long>>() {
-                });
+            String url = "https://api.github.com/repos/" + name
+                    + "/" + repositoryName + "/languages";
 
-
+            return restClient.get()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + githubToken)
+                    .retrieve()
+                    //converter o json da resposta diretamente em um map
+                    .body(new ParameterizedTypeReference<Map<String, Long>>() {
+                    });
+        });
     }
 }
 

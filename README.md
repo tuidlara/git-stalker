@@ -132,6 +132,6 @@ Or:
 ./mvnw spring-boot:run
 ```
 
-## Author
+## Autor
 
-Arthur de Lara Zilli
+Arthur de Lara Zilli - [LinkedIn](https://www.linkedin.com/in/arthur-de-lara-zilli-957512420/)

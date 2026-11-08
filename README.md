@@ -23,7 +23,7 @@ The project was developed to practice external API integration, authentication, 
 
 ## Technologies
 
-* Java
+* Java 17
 * Spring Boot
 * Spring Web
 * RestClient
